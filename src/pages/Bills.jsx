@@ -159,8 +159,8 @@ export default function Bills() {
       const billId = deleteModal.id;
       // BUG-01 fix: cascade delete orphan work entries and payments
       const [entriesSnap, paymentsSnap] = await Promise.all([
-        getDocs(query(collection(db, 'workEntries'), where('billId', '==', billId))),
-        getDocs(query(collection(db, 'payments'), where('billId', '==', billId))),
+        getDocs(query(collection(db, 'workEntries'), where('billId', '==', billId), where('userId', '==', user.uid))),
+        getDocs(query(collection(db, 'payments'), where('billId', '==', billId), where('userId', '==', user.uid))),
       ]);
       const deletePromises = [
         deleteDoc(doc(db, 'bills', billId)),

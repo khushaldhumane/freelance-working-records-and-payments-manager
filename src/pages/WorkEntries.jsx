@@ -111,7 +111,7 @@ export default function WorkEntries() {
         if (editing.billId && editing.billId !== form.billId) {
           const oldBill = bills.find(b => b.id === editing.billId);
           if (oldBill) {
-            const oldEntries = await getDocs(query(collection(db, 'workEntries'), where('billId', '==', editing.billId)));
+            const oldEntries = await getDocs(query(collection(db, 'workEntries'), where('billId', '==', editing.billId), where('userId', '==', user.uid)));
             const oldEntriesTotal = oldEntries.docs.reduce((s, d) => s + (d.data().amount || 0), 0);
             const oldBillTotal = oldEntriesTotal - (oldBill.advanceReceived || 0);
             const oldPaid = oldBill.totalPaymentsReceived || 0;
@@ -128,7 +128,7 @@ export default function WorkEntries() {
 
       // Recalculate current bill (bills are independent — no carry-forward)
       if (bill) {
-        const allEntries = await getDocs(query(collection(db, 'workEntries'), where('billId', '==', form.billId)));
+        const allEntries = await getDocs(query(collection(db, 'workEntries'), where('billId', '==', form.billId), where('userId', '==', user.uid)));
         const entriesTotal = allEntries.docs.reduce((s, d) => s + (d.data().amount || 0), 0);
         const billTotal = entriesTotal - (bill.advanceReceived || 0);
         const totalPaid = bill.totalPaymentsReceived || 0;

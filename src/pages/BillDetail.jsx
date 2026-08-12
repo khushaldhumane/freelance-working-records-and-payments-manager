@@ -336,9 +336,11 @@ export default function BillDetail() {
   );
   if (!bill) return null;
 
-  const balance = (bill.billTotal || 0) - (bill.totalPaymentsReceived || 0);
-  const payPct  = bill.billTotal > 0
-    ? Math.min(100, ((bill.totalPaymentsReceived || 0) / bill.billTotal) * 100)
+  const advance      = bill.advanceReceived || 0;
+  const totalReceived = (bill.totalPaymentsReceived || 0) + advance; // payments + advance
+  const balance       = (bill.billTotal || 0) - totalReceived;
+  const payPct        = bill.billTotal > 0
+    ? Math.min(100, (totalReceived / bill.billTotal) * 100)
     : 0;
 
   /* ─── Shared entry form fields ──────────────────────────── */
@@ -434,8 +436,11 @@ export default function BillDetail() {
         <div className="stat-card" style={{ '--stat-color':'var(--success)', '--stat-bg':'var(--success-bg)', '--stat-border':'var(--success-border)' }}>
           <div className="stat-icon-wrap"><CheckCircle size={20} color="var(--success)" /></div>
           <div className="stat-label">Amount Received</div>
-          <div className="stat-value" style={{ color:'var(--success)' }}>{formatCurrency(bill.totalPaymentsReceived || 0)}</div>
-          <div className="stat-sub">{payments.length} payment{payments.length !== 1 ? 's' : ''}</div>
+          <div className="stat-value" style={{ color:'var(--success)' }}>{formatCurrency(totalReceived)}</div>
+          <div className="stat-sub">
+            {payments.length} payment{payments.length !== 1 ? 's' : ''}
+            {advance > 0 ? ` + ₹${advance.toLocaleString('en-IN')} advance` : ''}
+          </div>
         </div>
         <div className="stat-card" style={{ '--stat-color': balance > 0 ? 'var(--danger)' : 'var(--success)', '--stat-bg': balance > 0 ? 'var(--danger-bg)' : 'var(--success-bg)', '--stat-border': balance > 0 ? 'var(--danger-border)' : 'var(--success-border)' }}>
           <div className="stat-icon-wrap"><AlertCircle size={20} color={balance > 0 ? 'var(--danger)' : 'var(--success)'} /></div>
@@ -554,7 +559,7 @@ export default function BillDetail() {
               </div>
               <div style={{ display: 'flex', justifyContent: 'space-between', fontSize: 14 }}>
                 <span style={{ color: 'var(--text-muted)' }}>Received</span>
-                <span style={{ color: 'var(--success)' }}>−{formatCurrency(bill.totalPaymentsReceived || 0)}</span>
+                <span style={{ color: 'var(--success)' }}>−{formatCurrency(totalReceived)}</span>
               </div>
               <div style={{ height: 1, background: 'var(--border-color)', margin: '4px 0' }} />
               <div style={{ display: 'flex', justifyContent: 'space-between', fontSize: 15, fontWeight: 700 }}>
@@ -574,12 +579,32 @@ export default function BillDetail() {
                 <Plus size={14} /> Record
               </button>
             </div>
-            {payments.length === 0 ? (
+          {/* Payments list — advance pinned at top, then recorded payments */}
+            {payments.length === 0 && advance === 0 ? (
               <div style={{ padding: '24px 20px', textAlign: 'center', color: 'var(--text-muted)', fontSize: 14 }}>
                 No payments recorded yet
               </div>
             ) : (
               <div>
+                {/* ── Advance payment row (pinned, read-only) ── */}
+                {advance > 0 && (
+                  <div style={{
+                    padding: '12px 20px',
+                    borderBottom: '1px solid var(--border-color)',
+                    display: 'flex', justifyContent: 'space-between', alignItems: 'center',
+                    background: 'rgba(99,102,241,0.04)',
+                  }}>
+                    <div>
+                      <div style={{ fontSize: 14, fontWeight: 600 }}>{formatCurrency(advance)}</div>
+                      <div style={{ fontSize: 12, color: 'var(--text-muted)' }}>
+                        Advance · At bill creation
+                      </div>
+                    </div>
+                    <span className="badge badge-accent">Advance</span>
+                  </div>
+                )}
+
+                {/* ── Recorded payments ── */}
                 {payments.map((p, i) => (
                   <div key={p.id} style={{
                     padding: '12px 20px',
@@ -600,6 +625,20 @@ export default function BillDetail() {
                     </div>
                   </div>
                 ))}
+
+                {/* ── Total received footer ── */}
+                {(payments.length > 0 || advance > 0) && (
+                  <div style={{
+                    padding: '12px 20px',
+                    background: 'var(--bg-glass-light)',
+                    borderTop: '2px solid var(--border-color)',
+                    display: 'flex', justifyContent: 'space-between',
+                    fontWeight: 700, fontSize: 14,
+                  }}>
+                    <span>Total Received</span>
+                    <span style={{ color: 'var(--success)' }}>{formatCurrency(totalReceived)}</span>
+                  </div>
+                )}
               </div>
             )}
           </div>

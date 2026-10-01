@@ -18,6 +18,7 @@ import Todos from './pages/Todos';
 import Settings from './pages/Settings';
 import BillGrid from './pages/BillGrid';
 import EntryManager from './pages/EntryManager';
+import RestoreData from './pages/RestoreData';
 
 function ProtectedLayout() {
   const { user } = useAuth();
@@ -52,6 +53,7 @@ function ProtectedLayout() {
           <Route path="/bills" element={<Bills />} />
           <Route path="/bills/:billId" element={<BillDetail />} />
           <Route path="/bills/:billId/entries" element={<EntryManager />} />
+          <Route path="/restore-data" element={<RestoreData />} />
           <Route path="/entries" element={<WorkEntries />} />
           <Route path="/todos" element={<Todos />} />
           <Route path="/settings" element={<Settings />} />

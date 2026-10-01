@@ -1,19 +1,22 @@
 import { useState } from 'react';
-import { useAuth } from '../context/AuthContext';
+import { useAuth, APP_USER_EMAIL } from '../context/AuthContext';
 import { useToast } from '../components/Toast';
-import { Lock, Eye, EyeOff, Briefcase } from 'lucide-react';
+import { Lock, Eye, EyeOff, Briefcase, Mail } from 'lucide-react';
 
 export default function Login() {
-  const { login } = useAuth();
+  const { login, resetPassword } = useAuth();
   const { toast } = useToast();
   const [password, setPassword] = useState('');
   const [showPw, setShowPw] = useState(false);
   const [loading, setLoading] = useState(false);
+  const [resetLoading, setResetLoading] = useState(false);
+  const [resetMsg, setResetMsg] = useState('');
   const [error, setError] = useState('');
 
   const handleSubmit = async (e) => {
     e.preventDefault();
     setError('');
+    setResetMsg('');
     if (!password) { setError('Please enter your password'); return; }
     setLoading(true);
     try {
@@ -22,6 +25,26 @@ export default function Login() {
     } catch (err) {
       setError('Incorrect password. Please try again.');
       setLoading(false);
+    }
+  };
+
+  const handleResetPassword = async () => {
+    setError('');
+    setResetMsg('');
+    setResetLoading(true);
+    try {
+      await resetPassword();
+      setResetMsg(`Password reset email sent to ${APP_USER_EMAIL}! Check your inbox (or spam folder).`);
+      toast('Reset email sent!', 'success');
+    } catch (err) {
+      console.error(err);
+      if (err.code === 'auth/user-not-found') {
+        setError(`User ${APP_USER_EMAIL} not found in Firebase. Please add this user in Firebase Console.`);
+      } else {
+        setError(err.message || 'Failed to send reset email.');
+      }
+    } finally {
+      setResetLoading(false);
     }
   };
 
@@ -91,7 +114,22 @@ export default function Login() {
           boxShadow: '0 8px 40px rgba(0,0,0,0.5), inset 0 1px 0 rgba(255,255,255,0.05)',
         }}>
           <form onSubmit={handleSubmit} style={{ display: 'flex', flexDirection: 'column', gap: '20px' }}>
-            <div className="form-group">
+            <div style={{
+              display: 'flex',
+              alignItems: 'center',
+              gap: 8,
+              padding: '10px 14px',
+              background: 'rgba(255,255,255,0.04)',
+              borderRadius: 'var(--radius-md)',
+              border: '1px solid var(--border-color)',
+              fontSize: 13,
+              color: 'var(--text-secondary)'
+            }}>
+              <Mail size={15} style={{ color: 'var(--accent)' }} />
+              <span style={{ fontFamily: 'monospace' }}>{APP_USER_EMAIL}</span>
+            </div>
+
+            <div className="form-group" style={{ marginBottom: 0 }}>
               <label className="form-label" htmlFor="password">
                 <Lock size={14} style={{ display: 'inline', marginRight: 6 }} />
                 App Password
@@ -123,6 +161,39 @@ export default function Login() {
               </div>
               {error && <p className="form-error">{error}</p>}
             </div>
+
+            <div style={{ display: 'flex', justifyContent: 'flex-end', marginTop: -6 }}>
+              <button
+                type="button"
+                onClick={handleResetPassword}
+                disabled={resetLoading}
+                style={{
+                  background: 'none',
+                  border: 'none',
+                  color: 'var(--accent)',
+                  fontSize: 13,
+                  cursor: resetLoading ? 'not-allowed' : 'pointer',
+                  padding: '2px 0',
+                  textDecoration: 'underline'
+                }}
+              >
+                {resetLoading ? 'Sending reset link…' : 'Forgot password?'}
+              </button>
+            </div>
+
+            {resetMsg && (
+              <div style={{
+                padding: '10px 14px',
+                background: 'rgba(34,197,94,0.1)',
+                border: '1px solid rgba(34,197,94,0.3)',
+                borderRadius: 'var(--radius-md)',
+                color: 'var(--success)',
+                fontSize: 13,
+                lineHeight: 1.4
+              }}>
+                {resetMsg}
+              </div>
+            )}
 
             <button
               type="submit"

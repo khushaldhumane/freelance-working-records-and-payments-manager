@@ -5,14 +5,15 @@ import {
   onAuthStateChanged,
   updatePassword,
   EmailAuthProvider,
-  reauthenticateWithCredential
+  reauthenticateWithCredential,
+  sendPasswordResetEmail
 } from 'firebase/auth';
 import { auth } from '../firebase/config';
 
 const AuthContext = createContext();
 
 // The single app user email (fixed, password-only auth concept)
-export const APP_USER_EMAIL = 'freelancer@app.local';
+export const APP_USER_EMAIL = 'khushaldhumane0011@gmail.com';
 
 export const AuthProvider = ({ children }) => {
   const [user, setUser] = useState(null);
@@ -31,6 +32,9 @@ export const AuthProvider = ({ children }) => {
 
   const logout = () => signOut(auth);
 
+  const resetPassword = () =>
+    sendPasswordResetEmail(auth, APP_USER_EMAIL);
+
   const changePassword = async (currentPassword, newPassword) => {
     const credential = EmailAuthProvider.credential(APP_USER_EMAIL, currentPassword);
     await reauthenticateWithCredential(auth.currentUser, credential);
@@ -38,7 +42,7 @@ export const AuthProvider = ({ children }) => {
   };
 
   return (
-    <AuthContext.Provider value={{ user, loading, login, logout, changePassword }}>
+    <AuthContext.Provider value={{ user, loading, login, logout, changePassword, resetPassword }}>
       {!loading && children}
     </AuthContext.Provider>
   );
